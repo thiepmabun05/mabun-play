@@ -1,4 +1,3 @@
-// js/core/storage.js
 const USER_KEY = 'mabun_user';
 const TOKEN_KEY = 'mabun_token';
 
