@@ -1,4 +1,3 @@
-// js/features/login.js
 import { showModal } from '../utils/modal.js';
 import { validatePhone, validatePassword, detectProvider } from '../utils/validation.js';
 import { setCurrentUser } from '../core/storage.js';
@@ -56,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const { user, token } = response;
       setCurrentUser({ ...user, token });
-
       window.location.href = 'dashboard.html';
     } catch (error) {
       console.error('Login error:', error);
