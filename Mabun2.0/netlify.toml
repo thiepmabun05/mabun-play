@@ -1,0 +1,50 @@
+# Netlify configuration for Mabun Quiz
+
+[build]
+  command = "./build.sh"
+  publish = "."
+
+# Headers for cache control and security
+[[headers]]
+  for = "/service-worker.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Optional: Cache static assets for long term (they are versioned via service worker)
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Optional: Set security headers (HSTS, X-Frame-Options, etc.)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Redirects
+# If you ever want clean URLs (e.g., /dashboard instead of /dashboard.html)
+# you can add rules like:
+# [[redirects]]
+#   from = "/dashboard"
+#   to = "/dashboard.html"
+#   status = 200
+# But this is optional – your app uses .html links, so it's not needed.
+
+# Custom 404 page
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
