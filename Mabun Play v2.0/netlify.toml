@@ -1,9 +1,8 @@
 # Netlify configuration for Mabun Quiz
 
 [build]
-  # No build command needed for static HTML, but you can specify one if you use any preprocessor.
-  command = "echo 'No build required'"
-  publish = "."   # Publish the root directory (all HTML, CSS, JS, assets)
+  command = "./build.sh"
+  publish = "."
 
 # Headers for cache control and security
 [[headers]]
