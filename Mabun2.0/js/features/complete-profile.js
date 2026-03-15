@@ -1,4 +1,3 @@
-// js/features/complete-profile.js
 import { showModal } from '../utils/modal.js';
 import { validateUsername, validateEmail } from '../utils/validation.js';
 import { setCurrentUser } from '../core/storage.js';
@@ -60,8 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.innerHTML = '<span class="loader"></span> Saving...';
 
     try {
-      // API call to complete profile
-      const response = await apiClient('/user/complete-profile', {
+      const response = await apiClient('/complete-profile', {
         method: 'POST',
         body: JSON.stringify({
           phone: fullPhone,
@@ -71,11 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }),
       });
 
-      // Response should contain user object and token
       const { user, token } = response;
-      // Store user and token in core storage
       setCurrentUser({ ...user, token });
-
       sessionStorage.removeItem('pending_registration');
       window.location.href = 'dashboard.html';
     } catch (error) {
@@ -86,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmText: 'OK',
       });
       submitBtn.disabled = false;
-      submitBtn.innerHTML = 'Save & Continue <iconify-icon icon="solar:arrow-right-bold"></iconify-icon>';
+      submitBtn.innerHTML = 'Complete Registration <iconify-icon icon="solar:arrow-right-bold"></iconify-icon>';
     }
   });
 });
