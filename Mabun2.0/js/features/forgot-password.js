@@ -1,4 +1,3 @@
-// js/features/forgot-password.js
 import { showModal } from '../utils/modal.js';
 import { validatePhone } from '../utils/validation.js';
 import { apiClient } from '../core/api.js';
@@ -23,13 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.innerHTML = '<span class="loader"></span> Sending...';
 
     try {
-      // Request password reset OTP
       await apiClient('/forgot-password', {
         method: 'POST',
         body: JSON.stringify({ phone: rawPhone }),
       });
 
-      // On success, redirect to OTP page with purpose=reset
       window.location.href = `otp.html?phone=${encodeURIComponent(rawPhone)}&purpose=reset`;
     } catch (error) {
       console.error('Forgot password error:', error);
