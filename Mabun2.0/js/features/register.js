@@ -1,6 +1,5 @@
-// js/features/register.js
 import { showModal } from '../utils/modal.js';
-import { validatePhone, validatePassword, detectProvider } from '../utils/validation.js';
+import { validatePhone, validatePassword, validateUsername, validateEmail, detectProvider } from '../utils/validation.js';
 import { apiClient } from '../core/api.js';
 import { initPasswordToggles } from '../utils/password-toggle.js';
 
@@ -11,8 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const phoneInput = document.getElementById('phone');
   const providerBadge = document.getElementById('providerBadge');
   const submitBtn = document.getElementById('submitBtn');
+  const usernameInput = document.getElementById('username');
+  const emailInput = document.getElementById('email');
 
-  if (!form || !phoneInput || !providerBadge || !submitBtn) return;
+  if (!form || !phoneInput || !providerBadge || !submitBtn || !usernameInput) return;
 
   phoneInput.addEventListener('input', () => {
     const digits = phoneInput.value.replace(/\D/g, '');
@@ -50,33 +51,44 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const username = usernameInput.value.trim();
+    if (!validateUsername(username)) {
+      await showModal({ title: 'Invalid Username', message: 'Username must be at least 3 characters.', confirmText: 'OK' });
+      return;
+    }
+
+    const email = emailInput ? emailInput.value.trim() : '';
+    if (email && !validateEmail(email)) {
+      await showModal({ title: 'Invalid Email', message: 'Please enter a valid email address or leave it blank.', confirmText: 'OK' });
+      return;
+    }
+
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="loader"></span> Sending...';
+    submitBtn.innerHTML = '<span class="loader"></span> Creating account...';
 
     try {
-      // Initiate registration – server sends OTP
-      const response = await apiClient('/register/init', {
+      await apiClient('/register', {
         method: 'POST',
         body: JSON.stringify({
           phone: rawPhone,
           password,
           provider: detectProvider(rawPhone) || 'mtn',
+          username,
+          email: email || null,
         }),
       });
 
-      // Store minimal pending data (phone and provider) for next step
-      sessionStorage.setItem('pending_registration', JSON.stringify({
-        phone: '+211' + rawPhone,
-        provider: detectProvider(rawPhone) || 'mtn',
-      }));
-
-      // Redirect to OTP verification
-      window.location.href = `otp.html?phone=${encodeURIComponent(rawPhone)}&purpose=register`;
+      await showModal({
+        title: 'Success',
+        message: 'Account created. Please log in.',
+        confirmText: 'OK'
+      });
+      window.location.href = 'login.html';
     } catch (error) {
-      console.error('Registration init error:', error);
+      console.error('Registration error:', error);
       await showModal({
         title: 'Registration Failed',
-        message: error.message || 'Could not start registration. Please try again.',
+        message: error.message || 'Could not create account. Please try again.',
         confirmText: 'OK',
       });
       submitBtn.disabled = false;
