@@ -1,5 +1,5 @@
-// leaderboard.js – Live leaderboard with real-time updates
-// No mock data – all data fetched from APIs and WebSocket
+// leaderboard.js – Live leaderboard with real-time updates via WebSocket
+// All data fetched from edge functions using apiClient.
 
 import { apiClient } from '../core/api.js';
 
