@@ -1,4 +1,3 @@
-// js/features/otp.js
 import { showModal } from '../utils/modal.js';
 import { apiClient } from '../core/api.js';
 
@@ -27,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
   hiddenPhone.value = phoneRaw;
   hiddenPurpose.value = purpose;
 
-  // OTP input logic (auto-advance, paste, etc.) – unchanged
+  // OTP input logic (auto-advance, paste)
   inputs.forEach((input, index) => {
     input.addEventListener('input', (e) => {
       const value = e.target.value.replace(/\D/g, '');
@@ -81,10 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
         method: 'POST',
         body: JSON.stringify({ phone: phoneRaw, purpose }),
       });
-      // Reset timer
       timeLeft = 120;
-      resendBtn.disabled = true;
-      // Optionally show success message
+      resendBtn.disabled = true; // will be enabled when timer ends
     } catch (error) {
       console.error('Resend error:', error);
       await showModal({
@@ -119,16 +116,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }),
       });
 
-      // On success, server may return a token for password reset or registration
       if (purpose === 'register') {
-        // Registration: go to complete profile
         window.location.href = `complete-profile.html?phone=${encodeURIComponent(phoneRaw)}`;
       } else if (purpose === 'reset') {
-        // Password reset: go to reset password page with token
-        const resetToken = response.token; // Assume server returns a reset token
+        const resetToken = response.token;
         window.location.href = `reset-password.html?phone=${encodeURIComponent(phoneRaw)}&token=${encodeURIComponent(resetToken)}`;
       } else {
-        // Fallback
         window.location.href = 'dashboard.html';
       }
     } catch (error) {
