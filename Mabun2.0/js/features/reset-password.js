@@ -1,4 +1,3 @@
-// js/features/reset-password.js
 import { showModal } from '../utils/modal.js';
 import { validatePassword } from '../utils/validation.js';
 import { apiClient } from '../core/api.js';
@@ -9,15 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const urlParams = new URLSearchParams(window.location.search);
   const phoneRaw = urlParams.get('phone');
-  const resetToken = urlParams.get('token'); // Token from OTP verification
+  const token = urlParams.get('token'); // reset token from OTP
 
-  if (!phoneRaw || !resetToken) {
+  if (!phoneRaw || !token) {
     window.location.href = 'login.html';
     return;
   }
 
   const hiddenPhone = document.getElementById('hiddenPhone');
-  const hiddenToken = document.getElementById('hiddenToken'); // You may need to add this hidden input
+  const hiddenToken = document.getElementById('hiddenToken');
   const form = document.getElementById('resetForm');
   const submitBtn = document.getElementById('submitBtn');
   const newPassword = document.getElementById('newPassword');
@@ -26,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!hiddenPhone || !hiddenToken || !form || !submitBtn || !newPassword || !confirmPassword) return;
 
   hiddenPhone.value = phoneRaw;
-  hiddenToken.value = resetToken;
+  hiddenToken.value = token;
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -50,8 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
       await apiClient('/reset-password', {
         method: 'POST',
         body: JSON.stringify({
-          phone: '+211' + phoneRaw,
-          token: resetToken,
+          phone: rawPhone,
+          token,
           newPassword: password,
         }),
       });
