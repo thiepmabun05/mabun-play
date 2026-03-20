@@ -1,37 +1,67 @@
+// js/features/register.js
 import { showModal } from '../utils/modal.js';
-import { validatePhone, validatePassword, validateUsername, validateEmail, detectProvider } from '../utils/validation.js';
-import { apiClient } from '../core/api.js';
+import { validatePhone, validatePassword, detectProvider } from '../utils/validation.js';
 import { initPasswordToggles } from '../utils/password-toggle.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOMContentLoaded in register.js');
+
   initPasswordToggles();
 
   const form = document.getElementById('registerForm');
+  const emailInput = document.getElementById('email');
   const phoneInput = document.getElementById('phone');
   const providerBadge = document.getElementById('providerBadge');
   const submitBtn = document.getElementById('submitBtn');
-  const usernameInput = document.getElementById('username');
-  const emailInput = document.getElementById('email');
 
-  if (!form || !phoneInput || !providerBadge || !submitBtn || !usernameInput) return;
+  if (!form) {
+    console.error('❌ registerForm not found');
+    return;
+  }
 
-  phoneInput.addEventListener('input', () => {
-    const digits = phoneInput.value.replace(/\D/g, '');
-    const provider = detectProvider(digits);
-    if (provider === 'mtn') {
-      providerBadge.textContent = 'MTN';
-      providerBadge.className = 'provider-badge mtn';
-    } else if (provider === 'digitel') {
-      providerBadge.textContent = 'Digitel';
-      providerBadge.className = 'provider-badge digitel';
-    } else {
-      providerBadge.textContent = '';
-      providerBadge.className = 'provider-badge';
-    }
-  });
+  if (!emailInput) console.warn('⚠️ email input not found');
+  if (!phoneInput) console.warn('⚠️ phone input not found');
+  if (!providerBadge) console.warn('⚠️ providerBadge not found');
+  if (!submitBtn) console.warn('⚠️ submit button not found');
+
+  if (typeof window.supabaseClient === 'undefined') {
+    console.error('❌ Supabase client not defined');
+    showModal({
+      title: 'Configuration Error',
+      message: 'Supabase client not loaded. Please refresh.',
+      confirmText: 'OK'
+    });
+    return;
+  }
+  console.log('✅ Supabase client found');
+
+  // Phone provider detection
+  if (phoneInput && providerBadge) {
+    phoneInput.addEventListener('input', () => {
+      const digits = phoneInput.value.replace(/\D/g, '');
+      const provider = detectProvider(digits);
+      if (provider === 'mtn') {
+        providerBadge.textContent = 'MTN';
+        providerBadge.className = 'provider-badge mtn';
+      } else if (provider === 'digitel') {
+        providerBadge.textContent = 'Digitel';
+        providerBadge.className = 'provider-badge digitel';
+      } else {
+        providerBadge.textContent = '';
+        providerBadge.className = 'provider-badge';
+      }
+    });
+  }
 
   form.addEventListener('submit', async (e) => {
+    console.log('🔵 Form submit intercepted');
     e.preventDefault();
+
+    const email = emailInput.value.trim();
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      await showModal({ title: 'Invalid Email', message: 'Please enter a valid email address.', confirmText: 'OK' });
+      return;
+    }
 
     const rawPhone = phoneInput.value.replace(/\D/g, '');
     if (!validatePhone(rawPhone)) {
@@ -51,39 +81,23 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const username = usernameInput.value.trim();
-    if (!validateUsername(username)) {
-      await showModal({ title: 'Invalid Username', message: 'Username must be at least 3 characters.', confirmText: 'OK' });
-      return;
-    }
-
-    const email = emailInput ? emailInput.value.trim() : '';
-    if (email && !validateEmail(email)) {
-      await showModal({ title: 'Invalid Email', message: 'Please enter a valid email address or leave it blank.', confirmText: 'OK' });
-      return;
-    }
-
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="loader"></span> Creating account...';
 
     try {
-      await apiClient('/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          phone: rawPhone,
-          password,
-          provider: detectProvider(rawPhone) || 'mtn',
-          username,
-          email: email || null,
-        }),
+      const { data, error } = await window.supabaseClient.auth.signUp({
+        email,
+        password,
       });
+      if (error) throw error;
 
-      await showModal({
-        title: 'Success',
-        message: 'Account created. Please log in.',
-        confirmText: 'OK'
-      });
-      window.location.href = 'login.html';
+      console.log('Signup initiated, storing pending data');
+      sessionStorage.setItem('pending_registration', JSON.stringify({
+        phone: '+211' + rawPhone,
+        provider: detectProvider(rawPhone) || 'mtn',
+      }));
+
+      window.location.href = 'complete-profile.html';
     } catch (error) {
       console.error('Registration error:', error);
       await showModal({
@@ -92,7 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmText: 'OK',
       });
       submitBtn.disabled = false;
-      submitBtn.innerHTML = 'Register <iconify-icon icon="solar:arrow-right-bold"></iconify-icon>';
+      submitBtn.innerHTML = 'Sign Up <iconify-icon icon="solar:arrow-right-bold"></iconify-icon>';
     }
   });
+
+  console.log('✅ Register event listener attached');
 });
