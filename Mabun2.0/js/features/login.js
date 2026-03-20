@@ -1,40 +1,44 @@
+// js/features/login.js
 import { showModal } from '../utils/modal.js';
-import { validatePhone, validatePassword, detectProvider } from '../utils/validation.js';
-import { setCurrentUser } from '../core/storage.js';
-import { apiClient } from '../core/api.js';
+import { validatePassword } from '../utils/validation.js';
 import { initPasswordToggles } from '../utils/password-toggle.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOMContentLoaded in login.js');
+
   initPasswordToggles();
 
   const form = document.getElementById('loginForm');
-  const phoneInput = document.getElementById('phone');
-  const providerBadge = document.getElementById('providerBadge');
+  const emailInput = document.getElementById('email');
   const submitBtn = document.getElementById('submitBtn');
 
-  if (!form || !phoneInput || !providerBadge || !submitBtn) return;
+  if (!form) {
+    console.error('❌ loginForm not found');
+    return;
+  }
+  if (!emailInput) console.warn('⚠️ email input not found');
+  if (!submitBtn) console.warn('⚠️ submit button not found');
 
-  phoneInput.addEventListener('input', () => {
-    const digits = phoneInput.value.replace(/\D/g, '');
-    const provider = detectProvider(digits);
-    if (provider === 'mtn') {
-      providerBadge.textContent = 'MTN';
-      providerBadge.className = 'provider-badge mtn';
-    } else if (provider === 'digitel') {
-      providerBadge.textContent = 'Digitel';
-      providerBadge.className = 'provider-badge digitel';
-    } else {
-      providerBadge.textContent = '';
-      providerBadge.className = 'provider-badge';
-    }
-  });
+  // Check Supabase client
+  if (typeof window.supabaseClient === 'undefined') {
+    console.error('❌ Supabase client not defined');
+    showModal({
+      title: 'Configuration Error',
+      message: 'Supabase client not loaded. Please refresh or contact support.',
+      confirmText: 'OK'
+    });
+    return;
+  }
+  console.log('✅ Supabase client found');
 
+  // Attach submit event
   form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+    console.log('🔵 Form submit intercepted');
+    e.preventDefault(); // Prevents page refresh
 
-    const rawPhone = phoneInput.value.replace(/\D/g, '');
-    if (!validatePhone(rawPhone)) {
-      await showModal({ title: 'Invalid Phone', message: 'Please enter a valid South Sudan number (92X or 98X).', confirmText: 'OK' });
+    const email = emailInput.value.trim();
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      await showModal({ title: 'Invalid Email', message: 'Please enter a valid email address.', confirmText: 'OK' });
       return;
     }
 
@@ -48,23 +52,25 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.innerHTML = '<span class="loader"></span> Logging in...';
 
     try {
-      const response = await apiClient('/login', {
-        method: 'POST',
-        body: JSON.stringify({ phone: rawPhone, password }),
+      const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+        email,
+        password,
       });
+      if (error) throw error;
 
-      const { user, token } = response;
-      setCurrentUser({ ...user, token });
+      console.log('Login successful, redirecting to dashboard');
       window.location.href = 'dashboard.html';
     } catch (error) {
       console.error('Login error:', error);
       await showModal({
         title: 'Login Failed',
-        message: error.message || 'Incorrect phone or password.',
+        message: error.message || 'Incorrect email or password.',
         confirmText: 'OK',
       });
       submitBtn.disabled = false;
       submitBtn.innerHTML = 'Log In <iconify-icon icon="solar:arrow-right-bold"></iconify-icon>';
     }
   });
+
+  console.log('✅ Login event listener attached');
 });
